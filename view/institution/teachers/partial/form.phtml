@@ -1,0 +1,245 @@
+<?php
+$form = $this->form;
+
+$form->prepare();
+
+$form->setAttribute('class', 'form-horizontal')
+    ->setAttribute('role', 'form');
+
+if ($form->isConfigurationFullView()) {
+    $form->get('has_access')->setAttribute('checked', 'checked');
+    $userModelFieldsClass = '';
+} elseif ($form->isConfigurationHideNewUserFields()) {
+    $form->get('has_access')->setAttribute('checked', 'checked');
+    $userModelFieldsClass = ' hide';
+} else {
+    $form->get('users_id')->setOption('hide_row', true);
+    $userModelFieldsClass = ' hide';
+}
+
+$form->get('phone')->setAttribute('data-mask', $this->PhoneMask());
+
+$submitElement = $form->get('submit');
+$submitElement->setAttributes(
+    [
+        'class' => 'btn btn-primary'
+    ]
+);
+?>
+
+    <div class="col-sm-12 m-b-lg">
+        <div class="ibox float-e-margins">
+            <div id="teacher-form-wrapper" class="ibox-content">
+                <?php
+                echo $this->CurrentAlerts();
+                echo $this->form()->openTag($form);
+
+                echo $this->formElement($form->get('id'));
+                echo $this->formElement($form->get('csrf'));
+
+                echo $this->formRow($form->get('lastname'), null, null, 'form/row');
+                echo $this->formRow($form->get('firstname'));
+                echo $this->formRow($form->get('middlename'));
+                ?>
+                <div class="form-group">
+                    <div class="col-lg-2 col-md-3 col-sm-4 control-label">
+                        <?php
+                        $form->get('subjects_id')->setLabelAttributes(['class' => '']);
+                        echo $this->formLabel($form->get('subjects_id'));
+                        ?>
+                    </div>
+                    <div class="col-lg-10 col-md-9 col-sm-8">
+                        <?php
+                        echo $this->formElement($form->get('subjects_id'));
+                        echo $this->formElementErrors($form->get('subjects_id'));
+                        echo $this->Html()->link(
+                            'Subjects of Elementary School',
+                            'javascript:void(0);',
+                            [
+                                'id' => 'elementary-school-teacher-link',
+                                'class' => 'action-link m-r-md'
+                            ]
+                        );
+                        echo $this->Html()->link(
+                            'Clear subjects',
+                            'javascript:void(0);',
+                            [
+                                'id' => 'clear-subjects-link',
+                                'class' => 'action-link'
+                            ]
+                        );
+                        ?>
+                    </div>
+                </div>
+                <?php
+                echo $this->formRow($form->get('school_level'));
+                echo $this->formRow($form->get('email'));
+                echo $this->formRow($form->get('phone'));
+
+                echo $this->formRow($form->get('has_access'), null, null, 'form/onoffrow');
+                echo $this->formRow($form->get('users_id'), null, null, 'form/row');
+                ?>
+
+                <div class="user-model-fields<?php echo $userModelFieldsClass; ?>">
+                    <?php
+                    echo $this->formRow($form->get('users_roles_code'));
+                    ?>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-lg-10 col-md-9 col-sm-8 col-lg-offset-2 col-md-offset-3 col-sm-offset-4">
+                        <?php
+                        echo $this->formElement($submitElement);
+                        echo $this->Html()->linkButton(
+                            'Cancel',
+                            $this->url('teachers'),
+                            [
+                                'color' => 'danger',
+                                'class' => 'm-l-xs'
+                            ]
+                        );
+                        ?>
+                    </div>
+                </div>
+
+                <?php
+                echo $this->form()->closeTag();
+                ?>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        <?php ob_start(); ?>
+        $('#teacher-lastname').focus();
+
+        $('#teacher-subjects-id').chosen({
+            width: "100%",
+            placeholder_text: ' '
+        });
+
+        $(document).on('click change', '#teacher-has-access', function () {
+            if ($(this).prop('checked') === true) {
+                $('#teacher-users-id').parents('.form-group').removeClass('hide');
+                if (!$('#teacher-users-id').val()) {
+                    $('.user-model-fields').removeClass('hide');
+                }
+                setUsersRequiredFields(true);
+            } else {
+                $('#teacher-users-id').parents('.form-group').addClass('hide');
+//            $( '#teacher-users-id' ).val( null );
+                $('.user-model-fields').addClass('hide');
+                setUsersRequiredFields(false);
+            }
+        }).on('change', '#teacher-users-id', function (event) {
+            if (!$(this).val()) {
+                $('.user-model-fields').removeClass('hide');
+                setUsersRequiredFields(true);
+
+                if (!$('#teacher-id').val()) {
+                    $('#teacher-lastname').val('');
+                    $('#teacher-firstname').val('');
+                    $('#teacher-middlename').val('');
+                }
+            } else {
+                var user_id = $(this).val();
+
+                $('.user-model-fields').addClass('hide');
+
+                if (!$('#teacher-id').val()) {
+                    $.ajax({
+                        url: '/users/getusername',
+                        data: {id: user_id},
+                        dataType: 'json',
+                        success: function (data) {
+                            $('#teacher-lastname').val(data.lastname);
+                            $('#teacher-firstname').val(data.firstname);
+                            $('#teacher-middlename').val(data.middlename);
+                            $('#teacher-email').val(data.email);
+                            $('#teacher-phone').val(data.phone);
+                        },
+                        statusCode: {
+                            404: function () {
+                                swal('Ошибка 404', 'Имя пользователя не найдено!', 'warning');
+                            },
+                            403: function () {
+                                swal('Ошибка 403', 'У вас нет прав на получение данных о пользователе!', 'warning');
+                            }
+                        }
+                    });
+                }
+
+                setUsersRequiredFields(false);
+            }
+        }).on('click', '#elementary-school-teacher-link', function () {
+            $('#teacher-subjects-id option[data-elementary-school=1]').prop('selected', true);
+            $('#teacher-subjects-id').chosen('destroy').chosen({
+                width: "100%",
+                placeholder_text: ' '
+            });
+        }).on('click', '#clear-subjects-link', function () {
+            $('#teacher-subjects-id option').removeAttr('selected');
+            $('#teacher-subjects-id').chosen('destroy').chosen({
+                width: "100%",
+                placeholder_text: ' '
+            });
+        });
+
+        $('.i-checks').iCheck({
+            checkboxClass: 'icheckbox_square-green',
+            radioClass: 'iradio_square-green',
+        });
+
+        function setUsersRequiredFields(required) {
+            if (required === true) {
+                $('#teacher-email').attr('required', 'required');
+                $('#teacher-email').parent().prev('label').addClass('required');
+            } else {
+                $('#teacher-email').removeAttr('required');
+                $('#teacher-email').parent().prev('label').removeClass('required');
+            }
+        }
+
+        <?php if($this->vacancy) : ?>
+        $('#teacher-submit-button')
+            .attr('type', 'button')
+            .attr('name', 'btnSubmit');
+
+        $(document).on('click', '#teacher-submit-button', function (event) {
+            swal(
+                {
+                    title: '<?php echo $this->translate('Fill the vacancy?'); ?>',
+                    showCancelButton: true,
+                    cancelButtonText: '<?php echo $this->translate('No') ?>',
+                }, function () {
+                    $('#teacher-form').submit();
+                }
+            );
+        });
+        <?php endif; ?>
+
+        <?php
+        $script = ob_get_contents();
+        ob_end_clean();
+        ?>
+    </script>
+
+<?php
+$this->headLink()->appendStylesheet($this->basePath() . '/css/plugins/chosen/chosen.css')
+    ->appendStylesheet($this->basePath() . '/css/plugins/iCheck/custom.css');
+$this->inlineScript()->appendFile($this->basePath() . '/js/plugins/chosen/chosen.jquery.js')
+    // Field masking plugin
+    ->appendFile($this->basePath() . '/js/plugins/jasny/jasny-bootstrap.min.js')
+    ->appendFile($this->basePath() . '/js/plugins/iCheck/icheck.min.js')
+    ->appendScript($script);
+
+if ($this->isTour) {
+    ob_start();
+    include __DIR__ . '/../../../../src/js/tour-teachers-form.js';
+    $script = ob_get_contents();
+    ob_end_clean();
+
+    $this->inlineScript()->appendFile($this->basePath() . '/js/plugins/bootstrapTour/bootstrap-tour.min.js')
+        ->appendScript(str_replace('__step__', $this->tourStep, $script));
+
+}

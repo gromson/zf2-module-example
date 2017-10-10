@@ -1,0 +1,52 @@
+<tr>
+    <td>
+        <?php
+        echo $this->translate( 'Delete' )
+        . ' ' . $this->Html()->faIcon( 'info-circle', [
+            'class' => 'text-info',
+            'style' => 'font-size:1.3em;',
+            'data-container' => 'body',
+            'data-toggle' => 'popover',
+            'data-placement' => 'right',
+            'data-content' => $this->escapeHtmlAttr( $this->translate( 'Use checkbox to mark groups for deletion, the selected groups will be deleted after save button.' ) ),
+            'data-trigger' => 'hover',
+            'data-html' => 'true'
+        ] );
+        ?>
+    </td>
+    <?php
+    for ( $g = $this->minGrade; $g <= $this->maxGrade; $g++ ) :
+        if ( isset( $this->columns[$g] ) ) :
+            foreach ( $this->columns[$g] as $rows ) :
+                ?>
+                <td class="group-data text-center<?php /*echo $rows['options']['is_last_year'] ? ' alert-info' : ''*/ ?>" data-grade="<?php echo $g ?>">
+                    <?php
+                    //if ( !$rows['options']['is_last_year'] ) {
+                        echo $rows['content']['delete'];
+//                    } else {
+//                        $content = $this->escapeHtmlAttr( sprintf( $this->translate( 'This group has been at the grade %d in the %s academic year. Would you like to increase its level?' ), ($g - 1 ), ($rows['options']['year'] - 1) . '/' . $rows['options']['year'] )
+//                            . $this->Html()->bootstrapCheckBox( 'level-up', 1, 'Yes', false, [ ], ['inputAttributes' => ['id' => 'level-up-checkbox' ] ] )
+//                            . $this->Html()->bootstrapCheckBox( 'final', 1, "No, don't ask me again", false, [ ], ['inputAttributes' => ['id' => 'final-checkbox' ] ] ) );
+//
+//                        echo $this->Html()->linkButton( '', 'javascript:;', ['data-content' => $content, 'icon' => 'gear', 'style' => 'font-size:1.3em', 'data-action' => 'level-up', 'size' => 'xs' ] )
+//                        . $rows['content']['level_up']
+//                        . $rows['content']['final'];
+//                    }
+                    ?>
+                </td>
+                <?php
+            endforeach;
+        else :
+            ?>
+            <td class="group-data text-center" data-grade="<?php echo $g ?>"></td>
+        <?php
+        endif;
+    endfor;
+    ?>
+    <td class="group-template-element">
+        <?php
+        $template = $this->template['delete'];
+        echo $this->Html()->tag( 'span', ['data-template' => $this->escapeHtmlAttr( $template ) ] );
+        ?>
+    </td>
+</tr>

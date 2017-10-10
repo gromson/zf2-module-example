@@ -1,0 +1,27 @@
+<?php echo $this->Alerts(); ?>
+
+<div class="col-sm-8">
+    <div class="ibox float-e-margins">
+        <div class="ibox-content">
+            <h1><?php echo $this->subject->title; ?></h1>
+            <dl class="dl-horizontal">
+                <dt><?php echo $this->translate( 'Difficulty Level' ) ?></dt>
+                <dd><?php echo $this->subject->level; ?></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+<div class="col-sm-4">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5><?php echo $this->translate( 'Traning programs' ) ?></h5>
+        </div>
+        <div class="ibox-content">
+            <ul>
+				<?php foreach ( ( array ) $this->subject->subjectProgram as $sp ) : ?>
+					<li><?php echo $sp->title . ' (' . $sp->duration . ' ' . $this->translate( 'hr.' ) . ')' . ($sp->authors ? ', <em>Авторы: ' . $sp->authors . '</em>' : ''); ?></li>
+				<?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+</div>

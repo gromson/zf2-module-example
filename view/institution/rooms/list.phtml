@@ -1,0 +1,37 @@
+<div class="ibox float-e-margins">
+	<div class="ibox-title">
+		<h5><?php echo $this->translate( 'Actions', 'default' ) ?></h5>
+	</div>
+	<div class="ibox-content">
+		<?php
+		if ( $this->isGranted( 'rooms.create' ) ) {
+			echo $this->Html()->button(
+				'Add Room',
+				['icon' => 'plus', 'data-action' => 'add-room', 'id' => 'button-add-room']
+			);
+		}
+		?>
+	</div>
+</div>
+
+<div class="ibox">
+    <div class="ibox-content">
+        <?php echo $this->Alerts(); ?>
+		<?php echo $this->DataTable( $this->dataTable ); ?>
+    </div>
+</div>
+
+<?php
+$this->headLink()->appendStylesheet( $this->basePath() . '/css/plugins/chosen/chosen.css' );
+$this->inlineScript()->appendFile( $this->basePath() . '/js/plugins/chosen/chosen.jquery.js' );
+
+if ($this->isTour) {
+	ob_start();
+	include __DIR__ . '/../../../src/js/tour-rooms.js';
+	$script = ob_get_contents();
+	ob_end_clean();
+
+	$this->inlineScript()->appendFile($this->basePath() . '/js/plugins/bootstrapTour/bootstrap-tour.min.js')
+		->appendScript(str_replace('__step__', $this->tourStep, $script));
+
+}

@@ -1,0 +1,21 @@
+<div class="ibox float-e-margins">
+	<div class="ibox-title">
+		<h5><?php echo $this->translate( 'Actions', 'default' ) ?></h5>
+	</div>
+	<div class="ibox-content">
+		<?php
+		if ( $this->isGranted( 'subjects.create' ) ) {
+			echo $this->Html()->linkButton( 'Add Subject', $this->url( 'subjects', ['action' => 'create' ] ), ['icon' => 'plus' ] );
+		}
+		?>
+	</div>
+</div>
+
+<div class="ibox">
+    <div class="ibox-content">
+        <?php echo $this->Alerts(); ?>
+		<?php echo $this->DataTable( $this->dataTable ); ?>
+    </div>
+</div>
+
+<div class="subject-view"></div>

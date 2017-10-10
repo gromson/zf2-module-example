@@ -1,0 +1,24 @@
+<tr>
+    <td class="group-data"><?php echo $this->translate( 'Number Of Male' ); ?></td>
+    <?php
+    for ( $g = $this->minGrade; $g <= $this->maxGrade; $g++ ) :
+        if ( isset( $this->columns[$g] ) ):
+            foreach ( $this->columns[$g] as $rows ) :
+                ?>
+                <td class="group-data<?php /*echo $rows['options']['is_last_year'] ? ' alert-info' : ''*/ ?>" data-grade="<?php echo $g ?>"><?php echo $rows['content']['male_count']; ?></td>
+                <?php
+            endforeach;
+        else:
+            ?>
+            <td class="group-data" data-grade="<?php echo $g ?>"></td>
+        <?php
+        endif;
+    endfor;
+    ?>
+    <td class="group-template-element">
+        <?php
+        $template = $this->template['male_count'];
+        echo $this->Html()->tag( 'span', ['data-template' => $this->escapeHtmlAttr( $template ) ] );
+        ?>
+    </td>
+</tr>

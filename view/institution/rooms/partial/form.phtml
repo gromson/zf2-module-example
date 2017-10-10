@@ -1,0 +1,42 @@
+<?php
+$form = $this->form;
+
+$form->prepare();
+
+$form->setAttribute( 'class', 'form-horizontal' )
+    ->setAttribute( 'role', 'form' );
+
+$submitElement = $form->get( 'submit' );
+$submitElement->setAttributes( [
+    'class' => 'btn btn-primary'
+] );
+?>
+
+<div class="row">
+    <?php
+    echo $this->CurrentAlerts();
+    echo $this->form()->openTag( $form );
+    ?>
+
+    <div class="col-sm-12">
+        <?php
+        echo $this->formElement( $form->get( 'id' ) );
+        echo $this->formRow( $form->get( 'number' ), null, null, 'form/row' );
+        echo $this->formRow( $form->get( 'rooms_categories_id' ), null, null );
+        echo $this->formRow( $form->get( 'capacity' ), null, null );
+        echo $this->formRow( $form->get( 'subjects_id' ), null, null );
+        echo $this->formRow( $form->get( 'comment' ), null, null );
+        ?>
+    </div>
+
+    <?php
+    echo $this->form()->closeTag();
+    ?>
+</div>
+
+<script type="text/javascript">
+    $( '#rooms-subjects-id' ).chosen( {
+        width: "100%",
+        placeholder_text: ' '
+    } );
+</script>

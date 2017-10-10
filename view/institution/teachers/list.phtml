@@ -1,0 +1,35 @@
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5><?php echo $this->translate('Actions', 'default') ?></h5>
+    </div>
+    <div class="ibox-content">
+        <?php
+        if ($this->isGranted('teachers.create')) {
+            echo $this->Html()->linkButton(
+                'Add Teacher',
+                $this->url('teachers', ['action' => 'create']),
+                ['icon' => 'plus', 'id' => 'create-teacher-button']
+            );
+        }
+        ?>
+    </div>
+</div>
+
+<div class="ibox">
+    <div class="ibox-content">
+        <?php echo $this->Alerts(); ?>
+        <?php echo $this->DataTable($this->dataTable); ?>
+    </div>
+</div>
+
+<?php
+if ($this->isTour) {
+    ob_start();
+    include __DIR__ . '/../../../src/js/tour-teachers-list.js';
+    $script = ob_get_contents();
+    ob_end_clean();
+
+    $this->inlineScript()->appendFile($this->basePath() . '/js/plugins/bootstrapTour/bootstrap-tour.min.js')
+        ->appendScript(str_replace('__step__', $this->tourStep, $script));
+
+}

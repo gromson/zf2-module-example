@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ */
+echo $this->partial( 'groups/table', [
+    'form' => $this->form,
+    'currentFormCategory' => $this->currentFormCategory
+] );
+
+if ($this->isTour) {
+    ob_start();
+    include __DIR__ . '/../../../src/js/tour-groups.js';
+    $script = ob_get_contents();
+    ob_end_clean();
+
+    $this->inlineScript()->appendFile($this->basePath() . '/js/plugins/bootstrapTour/bootstrap-tour.min.js')
+        ->appendScript(str_replace('__step__', $this->tourStep, $script));
+
+}

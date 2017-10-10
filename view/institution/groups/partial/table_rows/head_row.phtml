@@ -1,0 +1,28 @@
+<tr class="text-center">
+    <th><?php echo $this->translate('School class'); ?></th>
+    <?php
+    for ($g = $this->minGrade; $g <= $this->maxGrade; $g++) :
+        $colspan = isset($this->columns[$g])
+            ? sizeof($this->columns[$g])
+            : '0';
+        ?>
+        <th colspan="<?php echo $colspan; ?>" class="text-center" data-grade="<?php echo $g ?>">
+            <big><?php echo $g; ?></big><br/>
+            <?php
+            echo $this->Html()->button(
+                $this->translate('Add School Class'),
+                [
+                    'icon' => 'plus',
+                    'color' => 'primary',
+                    'size' => 'xs',
+                    'data-action' => 'add-group',
+                    'data-grade' => $g,
+                    'data-count' => $colspan,
+                    'id' => 'add-class-' . $g
+                ]
+            );
+            ?>
+        </th>
+    <?php endfor; ?>
+    <th class="group-template-element" rowspan="2"></th>
+</tr>

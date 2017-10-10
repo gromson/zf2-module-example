@@ -1,0 +1,15 @@
+<?php
+
+use Institution\Service\GroupsService;
+?>
+<ul class="nav nav-tabs">
+    <li class="<?php echo $this->currentFormCategory === GroupsService::ELEMENTARY_SCHOOL ? 'active' : '' ?>">
+        <a href="<?php echo $this->url( 'groups', ['form_category' => GroupsService::ELEMENTARY_SCHOOL ] ); ?>"><?php echo $this->translate( 'Elementary school' ) ?></a>
+    </li>
+    <li class="<?php echo $this->currentFormCategory === GroupsService::MIDDLE_SCHOOL ? 'active' : '' ?>">
+        <a href="<?php echo $this->url( 'groups', ['form_category' => GroupsService::MIDDLE_SCHOOL ] ); ?>"><?php echo $this->translate( 'Middle school' ) ?></a>
+    </li>
+    <li class="<?php echo $this->currentFormCategory === GroupsService::HIGH_SCHOOL ? 'active' : '' ?>">
+        <a href="<?php echo $this->url( 'groups', ['form_category' => GroupsService::HIGH_SCHOOL ] ); ?>"><?php echo $this->translate( 'High school' ) ?></a>
+    </li>
+</ul>

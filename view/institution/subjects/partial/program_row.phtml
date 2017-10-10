@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * Properties of $this object
+ *
+ * @property Zend\Form\ElementInterface $element Form element
+ * @property string $label Label
+ * @property array $labelAttributes
+ * @property null|string $labelPosition
+ * @property bool $renderErrors Are the errors are rendered by this helper?
+ *
+ */
+use Zend\Form\Element\Hidden;
+
+if ( $this->element instanceof Hidden ) :
+    echo $this->formHidden( $this->element );
+else :
+    if ( $this->renderErrors ) {
+        $rowClass = sizeof( $this->element->getMessages() ) ? 'form-group has-error' : 'form-group';
+    } else {
+        $rowClass = 'form-group';
+    }
+    ?>
+    <div class="<?php echo $rowClass ?>">
+
+        <div class="col-sm-12">
+            <?php echo $this->formElement( $this->element ); ?>
+            <?php echo $this->formElementErrors( $this->element ); ?>
+        </div>
+    </div>
+<?php
+endif;

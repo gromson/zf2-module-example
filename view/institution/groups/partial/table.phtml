@@ -1,0 +1,369 @@
+<?php
+$form = $this->form;
+
+$form->prepare();
+
+$form->setAttribute( 'role', 'form' );
+
+$groups = $form->get( 'groups' );
+$form->get( 'year' )->setAttribute( 'style', 'width:auto;' );
+
+$groupsEdges = \Institution\Service\GroupsService::getSchoolCategoryEdges( $this->currentFormCategory );
+
+$minGrade = $groupsEdges['low'];
+$maxGrade = $groupsEdges['high'];
+
+$columns = [ ];
+
+foreach ( $groups as $group ) {
+    if ( !$level = $group->get( 'activeGrade' )->get( 'level' )->getValue() ) {
+        continue;
+    }
+
+    $group->get( 'delete' )->setAttribute( 'id', uniqid( 'group-delete-' . $level ) );
+
+    $columns[$level][] = [
+        'content' => [
+            'delete' => $this->formBootstrapCheckbox( $group->get( 'delete' ) ),
+            'id' => $this->formElement( $group->get( 'id' ) ),
+            'grade' => $this->formElement( $group->get( 'activeGrade' )->get( 'level' ) ),
+            'begin_year' => $this->formElement( $group->get( 'activeGrade' )->get( 'begin_year' ) ),
+            'letter' => $this->formRow( $group->get( 'letter' ), null, null, 'form/compact-row' ),
+            'students_count' => $this->formRow( $group->get( 'activeGrade' )->get( 'students_count' ), null, null, 'form/compact-row' ),
+            'male_count' => $this->formRow( $group->get( 'activeGrade' )->get( 'male_count' ), null, null, 'form/compact-row' ),
+            'female_count' => $this->formRow( $group->get( 'activeGrade' )->get( 'female_count' ), null, null, 'form/compact-row' ),
+            'note' => $this->formRow( $group->get( 'note' ), null, null, 'form/compact-row' )
+        ],
+        'options' => [
+            'year' => (int) $form->get( 'year' )->getValue()
+        ]
+    ];
+}
+
+$templateGroup = $groups->getTemplateElement();
+$templateGroup->get( 'activeGrade' )->get( 'begin_year' )->setValue( $form->get( 'year' )->getValue() );
+
+$columns['template'] = [
+    'delete' => $this->formBootstrapCheckbox( $templateGroup->get( 'delete' ) ),
+    'id' => $this->formElement( $templateGroup->get( 'id' ) ),
+    'grade' => $this->formElement( $templateGroup->get( 'activeGrade' )->get( 'level' ) ),
+    'begin_year' => $this->formElement( $templateGroup->get( 'activeGrade' )->get( 'begin_year' ) ),
+    'letter' => $this->formRow( $templateGroup->get( 'letter' ), null, null, 'form/compact-row' ),
+    'students_count' => $this->formRow( $templateGroup->get( 'activeGrade' )->get( 'students_count' ), null, null, 'form/compact-row' ),
+    'male_count' => $this->formRow( $templateGroup->get( 'activeGrade' )->get( 'male_count' ), null, null, 'form/compact-row' ),
+    'female_count' => $this->formRow( $templateGroup->get( 'activeGrade' )->get( 'female_count' ), null, null, 'form/compact-row' ),
+    'note' => $this->formRow( $templateGroup->get( 'note' ), null, null, 'form/compact-row' )
+];
+
+$rowParams = [
+    'minGrade' => $minGrade,
+    'maxGrade' => $maxGrade,
+    'columns' => $columns,
+    'template' => $columns['template']
+];
+?>
+
+<div class="tabs-container">
+    <?php
+    echo $this->partial( 'partial/table_tabs_items.phtml', [
+        'currentFormCategory' => $this->currentFormCategory
+    ] );
+    ?>
+
+    <div class="tab-content">
+        <div class="tab-pane active">
+            <div class="panel-body">
+                <?php
+                echo $this->Alerts();
+                echo $this->form()->openTag( $form );
+                echo $this->formElement( $form->get( 'csrf' ) );
+                echo $this->formElementErrors( $form->get( 'csrf' ) );
+                echo $this->formElement( $form->get( 'year' ) );
+                ?>
+                <table id="groups-table" class="table table-striped table-bordered">
+                    <thead>
+                        <?php echo $this->partial( 'partial/table_rows/head_row.phtml', $rowParams ); ?>
+                    </thead>
+                    <tbody>
+                        <?php
+                        echo $this->partial( 'partial/table_rows/delete_row.phtml', $rowParams );
+                        echo $this->partial( 'partial/table_rows/letter_row.phtml', $rowParams );
+                        echo $this->partial( 'partial/table_rows/quantity_row.phtml', $rowParams );
+                        echo $this->partial( 'partial/table_rows/number_of_male_row.phtml', $rowParams );
+                        echo $this->partial( 'partial/table_rows/number_of_female_row.phtml', $rowParams );
+                        echo $this->partial( 'partial/table_rows/note_row.phtml', $rowParams );
+                        ?>
+                    </tbody>
+                </table>
+                <?php
+                echo $this->formElement( $form->get( 'submit' ) );
+                echo $this->Html()->linkButton( 'Cancel', '', [ 'color' => 'danger', 'class' => 'm-l-xs' ] );
+                echo $this->form()->closeTag();
+                ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="group-note-editfield" data-title="<?php echo $this->translate( 'Edit note' ) ?>">
+    <div class="form-group">
+        <input type="hidden" id="note-element-selector" name="note-element-selector" value="" />
+        <textarea rows="3" id="note-textarea" name="note-textarea" class="form-control"></textarea>
+    </div>
+</div>
+
+<style type="text/css">
+    #groups-table input[type=text]{
+        padding-left: 0;
+        padding-right: 0;
+        text-align: center;
+    }
+    td.group-data{
+        max-width: 25px;
+    }
+    th.group-template-element,
+    td.group-template-element{
+        display: none;
+    }
+    .incdesc-group{ margin: 0 auto; }
+</style>
+
+<script>
+<?php ob_start(); ?>
+    jQuery( document ).ready( function ( $ ) {
+        var modalNoteWindowOptions = {
+            buttons: {
+                cancel: {
+                    title: '<?php echo $this->translate( 'Cancel' ); ?>'
+                },
+                save: {
+                    title: '<?php echo $this->translate( 'Save changes' ); ?>',
+                    attributes: { 'data-action': 'apply-note' }
+                }
+            }
+        }
+
+        $( '#group-note-editfield' ).modalWindow( modalNoteWindowOptions );
+
+        $( 'button[data-action="add-group"]' ).on( 'click', function ( event ) {
+            var grade = $( this ).data( 'grade' ),
+                value = $( this ).data( 'count' ) + 1,
+                currentCount = $( '#groups-table > tbody td:not(.group-template-element) .group-id' ).length;
+
+            $( this ).data( 'count', value );
+
+            $( '#groups-table > thead > tr > [data-grade=' + grade + ']' ).attr( 'colspan', function ( index, value ) {
+                return parseInt( value ) + 1;
+            } );
+
+            $( '#groups-table > tbody > tr' ).each( function ( index ) {
+                var template = $( this ).find( 'td.group-template-element span[data-template]' ).data( 'template' ),
+                    $tdContainer;
+                template = template.replace( /__index__/g, currentCount );
+
+                if ( value > 1 ) {
+                    var $tplTD = $( this ).find( 'td[data-grade=' + grade + ']:last' );
+                    $tdContainer = $( '<td></td>' );
+
+                    $.each( $tplTD[0].attributes, function ( key, attribute ) {
+                        $tdContainer.attr( attribute.name, attribute.value );
+                    } );
+
+                    $tdContainer.removeClass( 'alert-info' );
+
+                    $( this ).find( 'td[data-grade=' + grade + ']:last' ).after( $tdContainer );
+                } else {
+                    $tdContainer = $( this ).find( 'td[data-grade=' + grade + ']:last' );
+                }
+
+                $tdContainer.append( template );
+            } );
+
+            $( 'input[name="groups[' + currentCount + '][activeGrade][level]"]' ).val( grade );
+            $( 'input[name="groups[' + currentCount + '][letter]"]' ).val( function ( index, value ) {
+                var letter = $( this ).parents( 'td' ).prev( 'td[data-grade=' + grade + ']' ).find( '.group-letter' ).val(),
+                    charCode;
+
+                if ( !letter || typeof letter === 'undefined' ) {
+                    charCode = 1039;
+                } else {
+                    charCode = letter.charCodeAt( 0 );
+                }
+
+                return String.fromCharCode( charCode + 1 );
+            } );
+
+            enablePopoverFieldError();
+        } );
+
+        $( document ).on( 'click', 'button[data-action="edit-note"]', function ( event ) { // Edit note button
+            var $note = $( this ).parent().find( 'input' ),
+                noteElementName = $note.attr( 'name' ),
+                index = noteElementName.match( /groups\[(\d+?)\]\[[^\]]+?\]/i )[1],
+                subtitle = '<?php echo $this->translate( 'School class' ); ?>: '
+                + $( 'input[name="groups[' + index + '][activeGrade][level]"]' ).val()
+                + $( 'input[name="groups[' + index + '][letter]"]' ).val(),
+                options = $.extend( { }, modalNoteWindowOptions, { subtitle: subtitle } );
+
+            $( '#note-textarea' ).empty().append( $note.val() );
+            $( '#note-element-selector' ).val( 'input[name="groups[' + index + '][note]"]' );
+            $( '#group-note-editfield' ).modalWindow( options ).modal( 'show' );
+        } ).on( 'click', '[data-action=apply-note]', function ( event ) { // Save not button in a modal window
+            var noteElementSelector = $( '#note-element-selector' ).val();
+            $( noteElementSelector ).val( $( '#note-textarea' ).val() );
+            $( '#group-note-editfield' ).modal( 'hide' );
+        } ).on( 'blur', '.group-male-count, .group-female-count', function ( event ) { // When male and female fields loose focus
+            var matches = $( this ).attr( 'name' ).match( /groups\[(\d+?)\]\[activeGrade\]\[(male_count|female_count)\]/i ),
+                index = matches[1],
+                property = matches[2],
+                summandElementName = ( property === 'male_count' ? 'female_count' : 'male_count' ),
+                quantity = (
+                    $( 'input[name="groups[' + index + '][activeGrade][students_count]"]' ).val() ?
+                    parseInt( $( 'input[name="groups[' + index + '][activeGrade][students_count]"]' ).val() ) :
+                    0
+                    ),
+                summand1 = ( $( this ).val() ? parseInt( $( this ).val() ) : 0 ),
+                summand2 = (
+                    $( 'input[name="groups[' + index + '][activeGrade][' + summandElementName + ']"]' ).val() ?
+                    parseInt( $( 'input[name="groups[' + index + '][activeGrade][' + summandElementName + ']"]' ).val() ) :
+                    0
+                    );
+
+            if ( $( 'input[name="groups[' + index + '][activeGrade][' + summandElementName + ']"]' ).val() !== '' ) {
+                $( 'input[name="groups[' + index + '][activeGrade][students_count]"]' ).val( summand1 + summand2 );
+            } else if ( $( 'input[name="groups[' + index + '][activeGrade][students_count]"]' ).val() !== '' ) {
+                $( 'input[name="groups[' + index + '][activeGrade][' + summandElementName + ']"]' ).val( quantity - summand1 );
+            } else {
+                $( 'input[name="groups[' + index + '][activeGrade][students_count]"]' ).val( summand1 + summand2 );
+            }
+
+            $( 'input[name="groups[' + index + '][activeGrade][' + summandElementName + ']"]' ).parent().removeClass( 'has-warning' );
+            $( this ).parent().removeClass( 'has-warning' );
+        } ).on( 'blur', '.group-students-count', function ( event ) { // When students count field loose focus
+            var index = $( this ).attr( 'name' ).match( /groups\[(\d+?)\]\[activeGrade\]\[[^\]]+?\]/i )[1],
+                value = $( this ).val() ? parseInt( $( this ).val() ) : 0,
+                summand1 = (
+                    $( 'input[name="groups[' + index + '][activeGrade][male_count]"]' ).val() ?
+                    parseInt( $( 'input[name="groups[' + index + '][activeGrade][male_count]"]' ).val() ) :
+                    0
+                    ),
+                summand2 = (
+                    $( 'input[name="groups[' + index + '][activeGrade][female_count]"]' ).val() ?
+                    parseInt( $( 'input[name="groups[' + index + '][activeGrade][female_count]"]' ).val() ) :
+                    0
+                    );
+
+            if ( summand1 > 0 && summand2 <= 0 ) {
+                $( 'input[name="groups[' + index + '][activeGrade][female_count]"]' ).val( value - summand1 );
+            } else if ( summand1 <= 0 && summand2 > 0 ) {
+                $( 'input[name="groups[' + index + '][activeGrade][male_count]"]' ).val( value - summand2 );
+            } else {
+                if ( parseInt( $( this ).val() ) !== summand1 + summand2 ) {
+                    $( 'input[name="groups[' + index + '][activeGrade][male_count]"]' ).parent().addClass( 'has-warning' );
+                    $( 'input[name="groups[' + index + '][activeGrade][female_count]"]' ).parent().addClass( 'has-warning' );
+                } else {
+                    $( 'input[name="groups[' + index + '][activeGrade][male_count]"]' ).parent().removeClass( 'has-warning' );
+                    $( 'input[name="groups[' + index + '][activeGrade][female_count]"]' ).parent().removeClass( 'has-warning' );
+                }
+            }
+        } ).on( 'change', '#group-academic-year', function () { // When academic year dropdown is changed
+            window.location.href = '?year=' + $( this ).val();
+        } ).on( 'click', '[data-action="level-up"]', function ( event ) { // When level up button is clicked
+            var $td = $( this ).parent(),
+                $button = $( this ),
+                $icon = $( this ).find( 'i' ),
+                content = $( this ).data( 'content' );
+
+            swal( {
+                title: '<?php echo $this->translate( 'Move to the next level' ); ?>',
+                text: content,
+                html: true,
+                showCancelButton: true,
+                cancelButtonText: '<?php echo $this->translate( 'Cancel', 'default' ) ?>',
+                confirmButtonText: '<?php echo $this->translate( 'Apply', 'default' ) ?>',
+                closeOnConfirm: false,
+            },
+                function ( isConfirmed ) {
+                    if ( isConfirmed ) {
+                        if ( $( '#final-checkbox' ).prop( 'checked' ) === true ) {
+                            $td.find( '.group-final' ).val( '1' );
+                            $td.find( '.group-level-up' ).val( '0' );
+                            $icon.removeClass( 'fa-gear fa-check fa-remove' ).addClass( 'fa-remove' );
+                            $button.removeClass( 'btn-danger btn-success' ).addClass( 'btn-danger' );
+                        } else if ( $( '#level-up-checkbox' ).prop( 'checked' ) === true ) {
+                            $td.find( '.group-final' ).val( '0' );
+                            $td.find( '.group-level-up' ).val( '1' );
+                            $icon.removeClass( 'fa-gear fa-check fa-remove' ).addClass( 'fa-check' );
+                            $button.removeClass( 'btn-danger btn-success' ).addClass( 'btn-success' );
+                        } else {
+                            $td.find( '.group-final' ).val( '0' );
+                            $td.find( '.group-level-up' ).val( '0' );
+                            $icon.removeClass( 'fa-gear fa-check fa-remove' ).addClass( 'fa-gear' );
+                            $button.removeClass( 'btn-danger btn-success' );
+                        }
+                    }
+                    swal.close();
+                }
+            );
+
+            if ( $td.find( '.group-level-up' ).val() == 1 ) {
+                $( '#final-checkbox' ).prop( 'checked', false );
+                $( '#level-up-checkbox' ).prop( 'checked', true );
+            }
+
+            if ( $td.find( '.group-final' ).val() == 1 ) {
+                $( '#final-checkbox' ).prop( 'checked', true );
+                $( '#level-up-checkbox' ).prop( 'checked', false ).prop( 'disabled', true );
+            }
+        } ).on( 'change', '#final-checkbox', function ( event ) { // When final checkbox set in the level up modal form
+            if ( $( this ).prop( 'checked' ) === true ) {
+                $( '#level-up-checkbox' ).prop( 'checked', false ).prop( 'disabled', true );
+            } else {
+                $( '#level-up-checkbox' ).prop( 'disabled', false );
+            }
+        } ).on( 'change', '.group-delete', function ( event ) {
+            var index = $( this ).attr( 'name' ).match( /groups\[(\d+?)\]\[[^\]]+?\]/i )[1];
+
+            if ( $( this ).prop( 'checked' ) === true ) {
+                $( '[name="groups[' + index + '][letter]"], [name="groups[' + index + '][activeGrade][students_count]"], [name="groups[' + index + '][activeGrade][male_count]"], [name="groups[' + index + '][activeGrade][female_count]"]' )
+                    .prop( 'readonly', true )
+                    .css( { opacity: 0.5 } );
+
+                $( '[name="groups[' + index + '][note]"]' ).next( 'button' ).prop( 'disabled', true );
+            } else {
+                $( '[name="groups[' + index + '][letter]"], [name="groups[' + index + '][activeGrade][students_count]"], [name="groups[' + index + '][activeGrade][male_count]"], [name="groups[' + index + '][activeGrade][female_count]"]' )
+                    .prop( 'readonly', false )
+                    .css( { opacity: 1 } );
+
+                $( '[name="groups[' + index + '][note]"]' ).next( 'button' ).prop( 'disabled', false );
+            }
+
+//            $( '[name="groups[' + index + '][activeGrade][students_count]"]' ).prop('readonly',true).css( { opacity: 0.5 } );
+//            $( '[name="groups[' + index + '][activeGrade][male_count]"]' ).css( { opacity: 0.5 } );
+//            $( '[name="groups[' + index + '][activeGrade][female_count]"]' ).css( { opacity: 0.5 } );
+        } );
+
+        function enablePopoverFieldError() {
+            $( '[data-toggle="popover-form-field-error"]' ).popover( {
+                template: '<div class="popover popover-danger" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>',
+                html: true,
+                title: '<?php echo $this->translate( 'Error', 'default' ); ?>',
+                container: 'body',
+                placement: 'auto',
+                trigger: 'hover focus'
+            } );
+        }
+
+        enablePopoverFieldError();
+    } );
+<?php
+$script = ob_get_contents();
+ob_end_clean();
+?>
+</script>
+<?php
+$this->headLink()->appendStylesheet( $this->basePath() . '/js/plugins/incdescfield/css/incdescfield.css' )
+    ->appendStylesheet( $this->basePath() . '/css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css' );
+$this->inlineScript()->appendFile( $this->basePath() . '/js/plugins/incdescfield/js/jquery.incdescfield.js' )
+    ->appendFile( $this->basePath() . '/js/modalWindow.js' );
+$this->inlineScript()->appendScript( $script );

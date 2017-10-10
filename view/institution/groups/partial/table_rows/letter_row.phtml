@@ -1,0 +1,35 @@
+<tr>
+    <td><?php echo $this->translate( 'Letter' ); ?></td>
+    <?php
+    for ( $g = $this->minGrade; $g <= $this->maxGrade; $g++ ) :
+        if ( isset( $this->columns[$g] ) ):
+            foreach ( $this->columns[$g] as $rows ) :
+                ?>
+                <td class="group-data<?php /*echo $rows['options']['is_last_year'] ? ' alert-info' : ''*/ ?>" data-grade="<?php echo $g ?>">
+                    <?php
+                    echo $rows['content']['id'];
+                    echo $rows['content']['grade'];
+                    echo $rows['content']['begin_year'];
+                    echo $rows['content']['letter'];
+                    ?>
+                </td>
+                <?php
+            endforeach;
+        else:
+            ?>
+            <td class="group-data" data-grade="<?php echo $g ?>"></td>
+        <?php
+        endif;
+    endfor;
+    ?>
+    <td class="group-template-element">
+        <?php
+        $template = $this->template['id']
+            . $this->template['grade']
+            . $this->template['begin_year']
+            . $this->template['letter'];
+
+        echo $this->Html()->tag( 'span', ['data-template' => $this->escapeHtmlAttr( $template ) ] );
+        ?>
+    </td>
+</tr>

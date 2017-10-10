@@ -1,0 +1,52 @@
+<tr>
+    <td><?php echo $this->translate( 'Note' ); ?></td>
+    <?php
+    for ( $g = $this->minGrade; $g <= $this->maxGrade; $g++ ) :
+        if ( isset( $this->columns[$g] ) ):
+            foreach ( $this->columns[$g] as $rows ) :
+                ?>
+                <td class="group-data text-center<?php /*echo $rows['options']['is_last_year'] ? ' alert-info' : ''*/ ?>"
+                    data-grade="<?php echo $g ?>">
+                    <?php
+                    echo $rows['content']['note'];
+                    echo $this->Html()->button(
+                        '',
+                        [
+                            'icon' => 'pencil',
+                            'color' => 'primary',
+                            'size' => 'xs',
+                            'data-action' => 'edit-note',
+                            'data-toggle' => 'tooltip',
+                            'data-placement' => 'bottom',
+                            'title' => $this->translate( 'Edit the note' )
+                        ]
+                    );
+                    ?>
+                </td>
+                <?php
+            endforeach;
+        else:
+            ?>
+            <td class="group-data text-center" data-grade="<?php echo $g ?>"></td>
+            <?php
+        endif;
+    endfor;
+    ?>
+    <td class="group-template-element">
+        <?php
+        $template = $this->template['note'] . $this->Html()->button(
+                '',
+                [
+                    'icon' => 'pencil',
+                    'color' => 'primary',
+                    'size' => 'xs',
+                    'data-action' => 'edit-note',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'title' => $this->translate( 'Edit the note' )
+                ]
+            );
+        echo $this->Html()->tag( 'span', [ 'data-template' => $this->escapeHtmlAttr( $template ) ] );
+        ?>
+    </td>
+</tr>
